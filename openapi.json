@@ -1,0 +1,1437 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GitReady API - AI-Powered Interview Preparation Tool",
+    "description": "RESTful API for analyzing GitHub repositories and generating comprehensive interview preparation materials using IBM Watsonx.ai. This API exposes code analysis and interview generation capabilities compatible with watsonx Orchestrate automation requirements.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "GitReady Support",
+      "email": "support@gitready.example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.gitready.example.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.gitready.example.com/v1",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:8000/v1",
+      "description": "Local development server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Repository Analysis",
+      "description": "Operations for analyzing GitHub repositories"
+    },
+    {
+      "name": "Interview Generation",
+      "description": "Operations for generating interview materials"
+    },
+    {
+      "name": "Code Quality",
+      "description": "Operations for code quality assessment"
+    },
+    {
+      "name": "Health",
+      "description": "API health and status endpoints"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "description": "Check API health status and service availability",
+        "operationId": "healthCheck",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analyze/repository": {
+      "post": {
+        "tags": ["Repository Analysis"],
+        "summary": "Analyze GitHub repository",
+        "description": "Clone and analyze a GitHub repository to extract code structure, files, and metadata. This is the first step before generating interview materials.",
+        "operationId": "analyzeRepository",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryAnalysisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Repository analyzed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryAnalysisResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/analyze/code-quality": {
+      "post": {
+        "tags": ["Code Quality"],
+        "summary": "Analyze code quality metrics",
+        "description": "Perform comprehensive code quality analysis including complexity metrics, security vulnerabilities, best practice violations, and improvement recommendations.",
+        "operationId": "analyzeCodeQuality",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CodeQualityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code quality analysis completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeQualityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/interview/generate": {
+      "post": {
+        "tags": ["Interview Generation"],
+        "summary": "Generate interview materials",
+        "description": "Generate comprehensive interview preparation materials including technical questions, non-technical explanations, code weaknesses analysis, and elevator pitch using IBM Watsonx.ai.",
+        "operationId": "generateInterview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InterviewGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interview materials generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/interview/questions": {
+      "post": {
+        "tags": ["Interview Generation"],
+        "summary": "Generate technical interview questions",
+        "description": "Generate only technical interview questions with detailed answers based on repository analysis.",
+        "operationId": "generateQuestions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Questions generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/analysis/{analysisId}": {
+      "get": {
+        "tags": ["Repository Analysis"],
+        "summary": "Get analysis by ID",
+        "description": "Retrieve a previously completed repository analysis by its ID.",
+        "operationId": "getAnalysis",
+        "parameters": [
+          {
+            "name": "analysisId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier for the analysis",
+            "schema": {
+              "type": "string",
+              "pattern": "^ana_[a-zA-Z0-9]{16}$",
+              "example": "ana_1234567890abcdef"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryAnalysisResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/interview/{interviewId}": {
+      "get": {
+        "tags": ["Interview Generation"],
+        "summary": "Get interview materials by ID",
+        "description": "Retrieve previously generated interview materials by ID.",
+        "operationId": "getInterview",
+        "parameters": [
+          {
+            "name": "interviewId",
+            "in": "path",
+            "required": true,
+            "description": "Unique identifier for the interview materials",
+            "schema": {
+              "type": "string",
+              "pattern": "^int_[a-zA-Z0-9]{16}$",
+              "example": "int_1234567890abcdef"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Interview materials retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewGenerationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authentication"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT bearer token authentication"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status", "timestamp", "version"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "degraded", "unhealthy"],
+            "description": "Overall health status of the service"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the health check"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "description": "API version number",
+            "example": "1.0.0"
+          },
+          "services": {
+            "type": "object",
+            "description": "Status of dependent services",
+            "properties": {
+              "watsonx": {
+                "type": "string",
+                "enum": ["operational", "degraded", "down"]
+              },
+              "git": {
+                "type": "string",
+                "enum": ["operational", "degraded", "down"]
+              }
+            }
+          }
+        }
+      },
+      "RepositoryAnalysisRequest": {
+        "type": "object",
+        "required": ["repository_url"],
+        "properties": {
+          "repository_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https?://github\\.com/[^/]+/[^/]+/?$",
+            "description": "GitHub repository URL (must be public)",
+            "example": "https://github.com/username/repository"
+          },
+          "analysis_depth": {
+            "type": "string",
+            "enum": ["quick", "standard", "deep"],
+            "default": "standard",
+            "description": "Depth of analysis to perform"
+          },
+          "include_dependencies": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to analyze dependency files"
+          },
+          "file_extensions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\.[a-z0-9]+$"
+            },
+            "description": "Specific file extensions to analyze (if empty, uses defaults)",
+            "example": [".py", ".js", ".ts"]
+          },
+          "exclude_directories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional directories to exclude from analysis",
+            "example": ["tests", "docs", "examples"]
+          },
+          "max_file_size_mb": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 10,
+            "default": 1,
+            "description": "Maximum size per file in megabytes"
+          },
+          "max_total_size_mb": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10,
+            "description": "Maximum total size of all files in megabytes"
+          }
+        }
+      },
+      "RepositoryAnalysisResponse": {
+        "type": "object",
+        "required": ["analysis_id", "repository_url", "repository_name", "status", "metadata", "created_at"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "Unique identifier for this analysis",
+            "example": "ana_1234567890abcdef"
+          },
+          "repository_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GitHub repository URL that was analyzed"
+          },
+          "repository_name": {
+            "type": "string",
+            "description": "Name of the repository"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "failed"],
+            "description": "Current status of the analysis"
+          },
+          "metadata": {
+            "type": "object",
+            "required": ["total_files", "total_size_bytes", "languages_detected"],
+            "properties": {
+              "total_files": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Total number of files analyzed"
+              },
+              "total_size_bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Total size of analyzed files in bytes"
+              },
+              "languages_detected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Programming languages detected in the repository"
+              },
+              "primary_language": {
+                "type": "string",
+                "description": "Primary programming language of the repository"
+              },
+              "file_types": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "Count of files by extension"
+              }
+            }
+          },
+          "file_structure": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileInfo"
+            },
+            "description": "List of analyzed files with metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when analysis was created"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when analysis completed"
+          },
+          "processing_time_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Processing time in milliseconds"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if status is 'failed'"
+          }
+        }
+      },
+      "FileInfo": {
+        "type": "object",
+        "required": ["path", "size_bytes", "language"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path of the file within the repository"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "File size in bytes"
+          },
+          "language": {
+            "type": "string",
+            "description": "Detected programming language"
+          },
+          "lines_of_code": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of lines of code"
+          },
+          "content_preview": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "First 500 characters of file content"
+          }
+        }
+      },
+      "CodeQualityRequest": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "ID of the repository analysis to assess"
+          },
+          "quality_checks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["complexity", "security", "best_practices", "performance", "maintainability", "documentation"]
+            },
+            "default": ["complexity", "security", "best_practices"],
+            "description": "Types of quality checks to perform"
+          },
+          "severity_threshold": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "default": "medium",
+            "description": "Minimum severity level to report"
+          },
+          "include_suggestions": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include improvement suggestions in the response"
+          },
+          "check_dependencies": {
+            "type": "boolean",
+            "default": false,
+            "description": "Check for vulnerable or outdated dependencies"
+          }
+        }
+      },
+      "CodeQualityResponse": {
+        "type": "object",
+        "required": ["analysis_id", "quality_score", "grade", "metrics", "issues"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$"
+          },
+          "quality_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Overall quality score (0-100)"
+          },
+          "grade": {
+            "type": "string",
+            "enum": ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"],
+            "description": "Letter grade based on quality score"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "complexity": {
+                "$ref": "#/components/schemas/ComplexityMetrics"
+              },
+              "maintainability": {
+                "$ref": "#/components/schemas/MaintainabilityMetrics"
+              },
+              "security": {
+                "$ref": "#/components/schemas/SecurityMetrics"
+              },
+              "performance": {
+                "$ref": "#/components/schemas/PerformanceMetrics"
+              }
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeIssue"
+            },
+            "description": "List of detected code issues"
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            },
+            "description": "Improvement recommendations"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ComplexityMetrics": {
+        "type": "object",
+        "properties": {
+          "average_cyclomatic_complexity": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Average cyclomatic complexity across all functions"
+          },
+          "max_cyclomatic_complexity": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Maximum cyclomatic complexity found"
+          },
+          "high_complexity_functions": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of functions with complexity > 10"
+          },
+          "cognitive_complexity_score": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Overall cognitive complexity score"
+          }
+        }
+      },
+      "MaintainabilityMetrics": {
+        "type": "object",
+        "properties": {
+          "maintainability_index": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Maintainability index (0-100, higher is better)"
+          },
+          "code_duplication_percentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of duplicated code"
+          },
+          "average_function_length": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Average lines per function"
+          },
+          "documentation_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Percentage of documented functions/classes"
+          }
+        }
+      },
+      "SecurityMetrics": {
+        "type": "object",
+        "properties": {
+          "vulnerabilities_found": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of security vulnerabilities"
+          },
+          "critical": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of critical severity vulnerabilities"
+          },
+          "high": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of high severity vulnerabilities"
+          },
+          "medium": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of medium severity vulnerabilities"
+          },
+          "low": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of low severity vulnerabilities"
+          },
+          "security_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Overall security score (0-100)"
+          }
+        }
+      },
+      "PerformanceMetrics": {
+        "type": "object",
+        "properties": {
+          "potential_bottlenecks": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of potential performance bottlenecks"
+          },
+          "inefficient_algorithms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of inefficient algorithm implementations"
+          },
+          "memory_issues": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of potential memory issues"
+          }
+        }
+      },
+      "CodeIssue": {
+        "type": "object",
+        "required": ["id", "type", "severity", "message", "file", "line"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the issue"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["complexity", "security", "best_practice", "performance", "maintainability", "documentation"],
+            "description": "Type of issue"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"],
+            "description": "Severity level of the issue"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable description of the issue"
+          },
+          "file": {
+            "type": "string",
+            "description": "File path where issue was found"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Line number where issue occurs"
+          },
+          "column": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Column number where issue occurs"
+          },
+          "code_snippet": {
+            "type": "string",
+            "description": "Code snippet showing the issue"
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "Suggested fix for the issue"
+          }
+        }
+      },
+      "Recommendation": {
+        "type": "object",
+        "required": ["category", "priority", "title", "description"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["architecture", "code_quality", "security", "performance", "testing", "documentation"],
+            "description": "Category of recommendation"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Priority level"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title of the recommendation"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the recommendation"
+          },
+          "impact": {
+            "type": "string",
+            "description": "Expected impact of implementing this recommendation"
+          },
+          "effort": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Estimated effort to implement"
+          }
+        }
+      },
+      "InterviewGenerationRequest": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "ID of the repository analysis"
+          },
+          "candidate_experience_level": {
+            "type": "string",
+            "enum": ["junior", "mid", "senior", "lead", "principal"],
+            "default": "mid",
+            "description": "Target experience level for interview questions"
+          },
+          "technical_domains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["algorithms", "architecture", "design_patterns", "data_structures", "testing", "security", "performance", "devops", "databases"]
+            },
+            "description": "Specific technical domains to focus on"
+          },
+          "question_difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard", "mixed"],
+            "default": "mixed",
+            "description": "Overall difficulty level of questions"
+          },
+          "number_of_questions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Number of technical questions to generate"
+          },
+          "interview_format": {
+            "type": "string",
+            "enum": ["technical_deep_dive", "behavioral", "system_design", "code_review", "comprehensive"],
+            "default": "comprehensive",
+            "description": "Format of interview materials"
+          },
+          "include_non_technical": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include non-technical explanation section"
+          },
+          "include_weaknesses": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include code weaknesses analysis"
+          },
+          "include_elevator_pitch": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include elevator pitch"
+          },
+          "custom_focus_areas": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Custom areas to focus on in questions"
+          },
+          "watsonx_parameters": {
+            "$ref": "#/components/schemas/WatsonxParameters"
+          }
+        }
+      },
+      "WatsonxParameters": {
+        "type": "object",
+        "description": "IBM Watsonx.ai model parameters for generation",
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "default": "ibm/granite-13b-chat-v2",
+            "description": "Watsonx model ID to use"
+          },
+          "decoding_method": {
+            "type": "string",
+            "enum": ["greedy", "sample"],
+            "default": "greedy",
+            "description": "Decoding method for text generation"
+          },
+          "max_new_tokens": {
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 4000,
+            "default": 4000,
+            "description": "Maximum number of tokens to generate"
+          },
+          "min_new_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Minimum number of tokens to generate"
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0.7,
+            "description": "Sampling temperature (higher = more creative)"
+          },
+          "top_k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Top-k sampling parameter"
+          },
+          "top_p": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1,
+            "description": "Top-p (nucleus) sampling parameter"
+          }
+        }
+      },
+      "InterviewGenerationResponse": {
+        "type": "object",
+        "required": ["interview_id", "analysis_id", "status", "created_at"],
+        "properties": {
+          "interview_id": {
+            "type": "string",
+            "pattern": "^int_[a-zA-Z0-9]{16}$",
+            "description": "Unique identifier for generated interview materials"
+          },
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "Associated repository analysis ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "generating", "completed", "failed"],
+            "description": "Generation status"
+          },
+          "technical_questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicalQuestion"
+            },
+            "description": "Generated technical interview questions"
+          },
+          "non_technical_explanation": {
+            "type": "string",
+            "description": "Non-technical explanation of the project"
+          },
+          "code_weaknesses": {
+            "$ref": "#/components/schemas/CodeWeaknessesAnalysis"
+          },
+          "elevator_pitch": {
+            "type": "string",
+            "description": "One-line elevator pitch for the project"
+          },
+          "raw_response": {
+            "type": "string",
+            "description": "Raw AI-generated response text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "generation_time_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Time taken to generate materials in milliseconds"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if status is 'failed'"
+          }
+        }
+      },
+      "TechnicalQuestion": {
+        "type": "object",
+        "required": ["question_number", "question", "answer", "difficulty", "category"],
+        "properties": {
+          "question_number": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Question number in the set"
+          },
+          "question": {
+            "type": "string",
+            "description": "The interview question text"
+          },
+          "answer": {
+            "type": "string",
+            "description": "Detailed answer with code references"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard"],
+            "description": "Difficulty level of the question"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["algorithms", "architecture", "design_patterns", "data_structures", "testing", "security", "performance", "general"],
+            "description": "Technical category"
+          },
+          "code_references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer"
+                },
+                "function": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Specific code locations referenced in the question"
+          },
+          "follow_up_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Suggested follow-up questions"
+          },
+          "evaluation_criteria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key points to evaluate in candidate's answer"
+          },
+          "scoring_rubric": {
+            "type": "object",
+            "properties": {
+              "excellent": {
+                "type": "string",
+                "description": "Criteria for excellent answer"
+              },
+              "good": {
+                "type": "string",
+                "description": "Criteria for good answer"
+              },
+              "acceptable": {
+                "type": "string",
+                "description": "Criteria for acceptable answer"
+              },
+              "poor": {
+                "type": "string",
+                "description": "Criteria for poor answer"
+              }
+            }
+          }
+        }
+      },
+      "CodeWeaknessesAnalysis": {
+        "type": "object",
+        "properties": {
+          "code_smells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["critical", "high", "medium", "low"]
+                }
+              }
+            }
+          },
+          "missing_error_handling": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "recommendation": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "performance_concerns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string"
+                },
+                "issue": {
+                  "type": "string"
+                },
+                "impact": {
+                  "type": "string"
+                },
+                "suggestion": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_vulnerabilities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["critical", "high", "medium", "low"]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "remediation": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "technical_debt": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "area": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": ["high", "medium", "low"]
+                },
+                "effort_estimate": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "missing_tests": {
+            "type": "object",
+            "properties": {
+              "test_coverage_percentage": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "untested_functions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "critical_paths_without_tests": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "QuestionGenerationRequest": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$"
+          },
+          "number_of_questions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard", "mixed"],
+            "default": "mixed"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["algorithms", "architecture", "design_patterns", "data_structures", "testing", "security", "performance"]
+            }
+          },
+          "include_follow_ups": {
+            "type": "boolean",
+            "default": true
+          },
+          "include_scoring_rubric": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "QuestionGenerationResponse": {
+        "type": "object",
+        "required": ["questions", "created_at"],
+        "properties": {
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechnicalQuestion"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "generation_time_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "message", "timestamp"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error type or code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the error"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Unique request identifier for debugging"
+          }
+        }
+      },
+      "ValidationError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "validation_errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "description": "Field that failed validation"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Validation error message"
+                    },
+                    "constraint": {
+                      "type": "string",
+                      "description": "Constraint that was violated"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request - invalid input parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "BAD_REQUEST",
+              "message": "Invalid repository URL format",
+              "timestamp": "2026-05-15T17:10:58.949Z",
+              "request_id": "req_abc123"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized - missing or invalid authentication",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "UNAUTHORIZED",
+              "message": "Invalid or missing API key",
+              "timestamp": "2026-05-15T17:10:58.949Z",
+              "request_id": "req_abc123"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "NOT_FOUND",
+              "message": "Analysis with ID 'ana_1234567890abcdef' not found",
+              "timestamp": "2026-05-15T17:10:58.949Z",
+              "request_id": "req_abc123"
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Validation error - request data failed validation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "example": {
+              "error": "VALIDATION_ERROR",
+              "message": "Request validation failed",
+              "timestamp": "2026-05-15T17:10:58.949Z",
+              "request_id": "req_abc123",
+              "validation_errors": [
+                {
+                  "field": "repository_url",
+                  "message": "Must be a valid GitHub URL",
+                  "constraint": "pattern"
+                },
+                {
+                  "field": "number_of_questions",
+                  "message": "Must be between 1 and 50",
+                  "constraint": "range"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "INTERNAL_SERVER_ERROR",
+              "message": "An unexpected error occurred while processing your request",
+              "timestamp": "2026-05-15T17:10:58.949Z",
+              "request_id": "req_abc123"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,683 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/v1/tools.json",
+  "version": "1.0.0",
+  "name": "gitready-mcp-tools",
+  "description": "Model Context Protocol tool definitions for GitReady AI-Powered Interview Preparation Tool. Provides code analysis and interview generation capabilities for watsonx Orchestrate integration.",
+  "tools": [
+    {
+      "name": "analyze_github_repository",
+      "description": "Analyzes a GitHub repository by cloning it, extracting code files, and generating metadata about the codebase structure, languages, and file organization. This is the foundational step required before generating interview materials or performing code quality assessments.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["repository_url"],
+        "properties": {
+          "repository_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https?://github\\.com/[^/]+/[^/]+/?$",
+            "description": "Public GitHub repository URL to analyze (e.g., https://github.com/username/repository)",
+            "examples": [
+              "https://github.com/torvalds/linux",
+              "https://github.com/microsoft/vscode",
+              "https://github.com/python/cpython"
+            ]
+          },
+          "analysis_depth": {
+            "type": "string",
+            "enum": ["quick", "standard", "deep"],
+            "default": "standard",
+            "description": "Depth of analysis: 'quick' for basic structure, 'standard' for comprehensive analysis, 'deep' for detailed inspection including dependencies"
+          },
+          "include_dependencies": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether to analyze dependency files (package.json, requirements.txt, etc.)"
+          },
+          "file_extensions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^\\.[a-z0-9]+$"
+            },
+            "description": "Specific file extensions to analyze. If empty, uses default supported extensions (.py, .js, .ts, .java, .cpp, .go, etc.)",
+            "examples": [[".py", ".js"], [".java", ".kt"], [".rs", ".toml"]]
+          },
+          "exclude_directories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Additional directories to exclude beyond defaults (node_modules, .git, __pycache__, etc.)",
+            "examples": [["tests", "docs"], ["examples", "benchmarks"]]
+          },
+          "max_file_size_mb": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 10,
+            "default": 1,
+            "description": "Maximum size per individual file in megabytes. Files larger than this are skipped."
+          },
+          "max_total_size_mb": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10,
+            "description": "Maximum total size of all analyzed files in megabytes. Processing stops when this limit is reached."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["analysis_id", "repository_url", "repository_name", "status", "metadata"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "Unique identifier for this analysis session"
+          },
+          "repository_url": {
+            "type": "string",
+            "description": "GitHub repository URL that was analyzed"
+          },
+          "repository_name": {
+            "type": "string",
+            "description": "Name of the repository (extracted from URL)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["completed", "failed", "partial"],
+            "description": "Analysis completion status"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "total_files": {
+                "type": "integer",
+                "description": "Total number of code files analyzed"
+              },
+              "total_size_bytes": {
+                "type": "integer",
+                "description": "Total size of analyzed files in bytes"
+              },
+              "languages_detected": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Programming languages found in the repository"
+              },
+              "primary_language": {
+                "type": "string",
+                "description": "Most prevalent programming language"
+              },
+              "file_types": {
+                "type": "object",
+                "additionalProperties": {"type": "integer"},
+                "description": "Count of files by extension"
+              }
+            }
+          },
+          "file_structure": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {"type": "string"},
+                "size_bytes": {"type": "integer"},
+                "language": {"type": "string"},
+                "lines_of_code": {"type": "integer"}
+              }
+            }
+          },
+          "processing_time_ms": {
+            "type": "integer",
+            "description": "Time taken to complete analysis in milliseconds"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if status is 'failed'"
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": {
+            "repository_url": "https://github.com/username/my-project",
+            "analysis_depth": "standard"
+          },
+          "output": {
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "repository_url": "https://github.com/username/my-project",
+            "repository_name": "my-project",
+            "status": "completed",
+            "metadata": {
+              "total_files": 42,
+              "total_size_bytes": 524288,
+              "languages_detected": ["Python", "JavaScript"],
+              "primary_language": "Python",
+              "file_types": {".py": 30, ".js": 12}
+            },
+            "processing_time_ms": 3500
+          }
+        }
+      ]
+    },
+    {
+      "name": "assess_code_quality",
+      "description": "Performs comprehensive code quality assessment on a previously analyzed repository. Evaluates complexity metrics, security vulnerabilities, best practice violations, performance bottlenecks, maintainability issues, and provides actionable improvement recommendations.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "ID of the repository analysis to assess (from analyze_github_repository)"
+          },
+          "quality_checks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["complexity", "security", "best_practices", "performance", "maintainability", "documentation"]
+            },
+            "default": ["complexity", "security", "best_practices"],
+            "description": "Specific quality checks to perform"
+          },
+          "severity_threshold": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "default": "medium",
+            "description": "Minimum severity level to report in results"
+          },
+          "include_suggestions": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include detailed improvement suggestions for each issue"
+          },
+          "check_dependencies": {
+            "type": "boolean",
+            "default": false,
+            "description": "Check for vulnerable or outdated dependencies"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["analysis_id", "quality_score", "grade", "metrics", "issues"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "description": "Associated repository analysis ID"
+          },
+          "quality_score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Overall quality score (0-100, higher is better)"
+          },
+          "grade": {
+            "type": "string",
+            "enum": ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"],
+            "description": "Letter grade based on quality score"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "complexity": {
+                "type": "object",
+                "properties": {
+                  "average_cyclomatic_complexity": {"type": "number"},
+                  "max_cyclomatic_complexity": {"type": "integer"},
+                  "high_complexity_functions": {"type": "integer"}
+                }
+              },
+              "maintainability": {
+                "type": "object",
+                "properties": {
+                  "maintainability_index": {"type": "number"},
+                  "code_duplication_percentage": {"type": "number"}
+                }
+              },
+              "security": {
+                "type": "object",
+                "properties": {
+                  "vulnerabilities_found": {"type": "integer"},
+                  "critical": {"type": "integer"},
+                  "high": {"type": "integer"},
+                  "medium": {"type": "integer"},
+                  "low": {"type": "integer"}
+                }
+              }
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string"},
+                "severity": {"type": "string"},
+                "message": {"type": "string"},
+                "file": {"type": "string"},
+                "line": {"type": "integer"},
+                "suggestion": {"type": "string"}
+              }
+            }
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {"type": "string"},
+                "priority": {"type": "string"},
+                "title": {"type": "string"},
+                "description": {"type": "string"}
+              }
+            }
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": {
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "quality_checks": ["complexity", "security", "best_practices"],
+            "severity_threshold": "medium"
+          },
+          "output": {
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "quality_score": 78.5,
+            "grade": "B",
+            "metrics": {
+              "complexity": {
+                "average_cyclomatic_complexity": 4.2,
+                "max_cyclomatic_complexity": 15,
+                "high_complexity_functions": 3
+              },
+              "security": {
+                "vulnerabilities_found": 2,
+                "critical": 0,
+                "high": 1,
+                "medium": 1,
+                "low": 0
+              }
+            },
+            "issues": [
+              {
+                "type": "security",
+                "severity": "high",
+                "message": "Hardcoded credentials detected",
+                "file": "src/config.py",
+                "line": 42,
+                "suggestion": "Use environment variables for sensitive data"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "generate_interview_materials",
+      "description": "Generates comprehensive interview preparation materials using IBM Watsonx.ai based on repository analysis. Creates technical questions with detailed answers, non-technical explanations, code weakness analysis, and elevator pitch. All content references actual code implementations from the analyzed repository.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "ID of the repository analysis (from analyze_github_repository)"
+          },
+          "candidate_experience_level": {
+            "type": "string",
+            "enum": ["junior", "mid", "senior", "lead", "principal"],
+            "default": "mid",
+            "description": "Target experience level for tailoring question difficulty and depth"
+          },
+          "technical_domains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["algorithms", "architecture", "design_patterns", "data_structures", "testing", "security", "performance", "devops", "databases"]
+            },
+            "description": "Specific technical domains to emphasize in questions"
+          },
+          "question_difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard", "mixed"],
+            "default": "mixed",
+            "description": "Overall difficulty distribution of generated questions"
+          },
+          "number_of_questions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Number of technical interview questions to generate"
+          },
+          "interview_format": {
+            "type": "string",
+            "enum": ["technical_deep_dive", "behavioral", "system_design", "code_review", "comprehensive"],
+            "default": "comprehensive",
+            "description": "Interview format style for material generation"
+          },
+          "include_non_technical": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include non-technical explanation section for stakeholder communication"
+          },
+          "include_weaknesses": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include code weaknesses and technical debt analysis"
+          },
+          "include_elevator_pitch": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include one-line elevator pitch for the project"
+          },
+          "custom_focus_areas": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Custom topics or areas to emphasize in questions",
+            "examples": [["error handling", "async patterns"], ["API design", "authentication"]]
+          },
+          "watsonx_parameters": {
+            "type": "object",
+            "description": "IBM Watsonx.ai model parameters for fine-tuning generation",
+            "properties": {
+              "model_id": {
+                "type": "string",
+                "default": "ibm/granite-13b-chat-v2",
+                "description": "Watsonx model identifier"
+              },
+              "temperature": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 2,
+                "default": 0.7,
+                "description": "Sampling temperature (0=deterministic, 2=very creative)"
+              },
+              "max_new_tokens": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 4000,
+                "default": 4000,
+                "description": "Maximum tokens to generate"
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["interview_id", "analysis_id", "status"],
+        "properties": {
+          "interview_id": {
+            "type": "string",
+            "pattern": "^int_[a-zA-Z0-9]{16}$",
+            "description": "Unique identifier for generated interview materials"
+          },
+          "analysis_id": {
+            "type": "string",
+            "description": "Associated repository analysis ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["completed", "failed", "partial"],
+            "description": "Generation status"
+          },
+          "technical_questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_number": {"type": "integer"},
+                "question": {"type": "string"},
+                "answer": {"type": "string"},
+                "difficulty": {"type": "string", "enum": ["easy", "medium", "hard"]},
+                "category": {"type": "string"},
+                "code_references": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": {"type": "string"},
+                      "line": {"type": "integer"},
+                      "function": {"type": "string"}
+                    }
+                  }
+                },
+                "follow_up_questions": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "evaluation_criteria": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "scoring_rubric": {
+                  "type": "object",
+                  "properties": {
+                    "excellent": {"type": "string"},
+                    "good": {"type": "string"},
+                    "acceptable": {"type": "string"},
+                    "poor": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "non_technical_explanation": {
+            "type": "string",
+            "description": "Jargon-free explanation suitable for non-technical stakeholders"
+          },
+          "code_weaknesses": {
+            "type": "object",
+            "properties": {
+              "code_smells": {"type": "array"},
+              "missing_error_handling": {"type": "array"},
+              "performance_concerns": {"type": "array"},
+              "security_vulnerabilities": {"type": "array"},
+              "technical_debt": {"type": "array"}
+            }
+          },
+          "elevator_pitch": {
+            "type": "string",
+            "description": "Compelling one-line project description"
+          },
+          "generation_time_ms": {
+            "type": "integer",
+            "description": "Time taken to generate materials in milliseconds"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if status is 'failed'"
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": {
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "candidate_experience_level": "mid",
+            "number_of_questions": 10,
+            "interview_format": "comprehensive"
+          },
+          "output": {
+            "interview_id": "int_x9y8z7w6v5u4t3s2",
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "status": "completed",
+            "technical_questions": [
+              {
+                "question_number": 1,
+                "question": "Explain the error handling strategy in the clone_repository function. Why is depth=1 used?",
+                "answer": "The function uses try-except to catch GitPython exceptions. depth=1 performs a shallow clone...",
+                "difficulty": "medium",
+                "category": "architecture",
+                "code_references": [
+                  {"file": "app.py", "line": 63, "function": "clone_repository"}
+                ]
+              }
+            ],
+            "elevator_pitch": "GitReady transforms GitHub repositories into interview-ready materials using AI",
+            "generation_time_ms": 45000
+          }
+        }
+      ]
+    },
+    {
+      "name": "generate_technical_questions",
+      "description": "Generates only technical interview questions with detailed answers, without other interview materials. Useful when you need focused question generation for specific technical domains or difficulty levels.",
+      "inputSchema": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "properties": {
+          "analysis_id": {
+            "type": "string",
+            "pattern": "^ana_[a-zA-Z0-9]{16}$",
+            "description": "ID of the repository analysis"
+          },
+          "number_of_questions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "Number of questions to generate"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard", "mixed"],
+            "default": "mixed",
+            "description": "Question difficulty level"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["algorithms", "architecture", "design_patterns", "data_structures", "testing", "security", "performance"]
+            },
+            "description": "Specific technical categories to focus on"
+          },
+          "include_follow_ups": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include follow-up questions for each main question"
+          },
+          "include_scoring_rubric": {
+            "type": "boolean",
+            "default": true,
+            "description": "Include detailed scoring rubric for evaluating answers"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["questions"],
+        "properties": {
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "question_number": {"type": "integer"},
+                "question": {"type": "string"},
+                "answer": {"type": "string"},
+                "difficulty": {"type": "string"},
+                "category": {"type": "string"},
+                "follow_up_questions": {"type": "array", "items": {"type": "string"}},
+                "evaluation_criteria": {"type": "array", "items": {"type": "string"}},
+                "scoring_rubric": {"type": "object"}
+              }
+            }
+          },
+          "generation_time_ms": {"type": "integer"}
+        }
+      },
+      "examples": [
+        {
+          "input": {
+            "analysis_id": "ana_a1b2c3d4e5f6g7h8",
+            "number_of_questions": 5,
+            "difficulty": "hard",
+            "categories": ["architecture", "security"]
+          },
+          "output": {
+            "questions": [
+              {
+                "question_number": 1,
+                "question": "How would you refactor the single-file architecture to improve testability?",
+                "answer": "The current single-file design in app.py makes unit testing difficult...",
+                "difficulty": "hard",
+                "category": "architecture"
+              }
+            ],
+            "generation_time_ms": 25000
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "provider": "GitReady",
+    "version": "1.0.0",
+    "author": "GitReady Team",
+    "license": "MIT",
+    "homepage": "https://github.com/gitready/gitready",
+    "documentation": "https://docs.gitready.example.com",
+    "support": {
+      "email": "support@gitready.example.com",
+      "issues": "https://github.com/gitready/gitready/issues"
+    },
+    "requirements": {
+      "watsonx_api_key": {
+        "type": "environment_variable",
+        "name": "WATSONX_API_KEY",
+        "description": "IBM Watsonx.ai API key for AI-powered analysis",
+        "required": true
+      },
+      "watsonx_project_id": {
+        "type": "environment_variable",
+        "name": "WATSONX_PROJECT_ID",
+        "description": "IBM Watsonx.ai project ID",
+        "required": true
+      },
+      "watsonx_url": {
+        "type": "environment_variable",
+        "name": "WATSONX_URL",
+        "description": "IBM Watsonx.ai service URL",
+        "required": false,
+        "default": "https://us-south.ml.cloud.ibm.com"
+      }
+    },
+    "capabilities": {
+      "repository_analysis": true,
+      "code_quality_assessment": true,
+      "interview_generation": true,
+      "ai_powered": true,
+      "multi_language_support": true,
+      "watsonx_integration": true
+    },
+    "supported_languages": [
+      "Python", "JavaScript", "TypeScript", "Java", "C++", "C", "C#",
+      "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin", "Scala", "R",
+      "SQL", "Shell", "YAML", "JSON", "XML", "HTML", "CSS", "Markdown"
+    ],
+    "integration_notes": {
+      "watsonx_orchestrate": "These tools are designed for seamless integration with watsonx Orchestrate. Each tool follows the MCP specification and includes comprehensive input validation, error handling, and structured outputs suitable for automation workflows.",
+      "authentication": "Tools require IBM Watsonx.ai credentials via environment variables. Ensure WATSONX_API_KEY and WATSONX_PROJECT_ID are set before invoking tools.",
+      "rate_limits": "Watsonx.ai API has rate limits. Consider implementing retry logic and exponential backoff for production deployments.",
+      "best_practices": [
+        "Always call analyze_github_repository first before other tools",
+        "Store analysis_id for subsequent operations",
+        "Use appropriate analysis_depth based on repository size",
+        "Set reasonable max_file_size_mb and max_total_size_mb limits",
+        "Cache analysis results to avoid redundant API calls",
+        "Handle errors gracefully and provide user feedback"
+      ]
+    }
+  }
+}
