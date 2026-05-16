@@ -22,6 +22,10 @@ from ibm_watsonx_ai.foundation_models import Model
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 import tiktoken
 import json
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -331,7 +335,7 @@ def analyze_with_watsonx_streaming(code_content: str, repo_url: str, credentials
     try:
         # Initialize Watsonx model
         model = Model(
-            model_id="ibm/granite-13b-chat-v2",
+            model_id="ibm/granite-8b-code-instruct",
             params={
                 GenParams.DECODING_METHOD: "greedy",
                 GenParams.MAX_NEW_TOKENS: MAX_NEW_TOKENS,
@@ -520,7 +524,7 @@ def analyze_repository_async(
         
         # Analyze (non-streaming version for external calls)
         model = Model(
-            model_id="ibm/granite-13b-chat-v2",
+            model_id="ibm/granite-8b-code-instruct",
             params={
                 GenParams.DECODING_METHOD: "greedy",
                 GenParams.MAX_NEW_TOKENS: MAX_NEW_TOKENS,
@@ -564,10 +568,10 @@ def analyze_repository_async(
         # Cleanup
         if temp_dir and os.path.exists(temp_dir):
             try:
-                shutil.rmtree(temp_dir)
+                shutil.rmtree(temp_dir, ignore_errors=True)
                 logger.info(f"Cleaned up temp directory: {temp_dir}")
             except Exception as e:
-                logger.warning(f"Cleanup failed: {e}")
+                logger.warning(f"Cleanup failed (non-critical): {e}")
     
     return result
 
@@ -722,7 +726,7 @@ export WATSONX_URL="https://us-south.ml.cloud.ibm.com"
                     # Cleanup temporary directory
                     if temp_dir and os.path.exists(temp_dir):
                         try:
-                            shutil.rmtree(temp_dir)
+                            shutil.rmtree(temp_dir, ignore_errors=True)
                         except Exception as e:
                             st.warning(f"⚠️ Could not clean up temporary files: {str(e)}")
     
