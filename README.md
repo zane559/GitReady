@@ -158,15 +158,6 @@ The application will open in your default web browser at `http://localhost:8501`
    - 🎯 Elevator Pitch
 4. **Download**: Save the complete analysis as a text file
 
-## 🎨 Application Architecture
-
-```
-GitReady/
-├── app.py              # Main Streamlit application (single file)
-├── requirements.txt    # Python dependencies
-└── README.md          # This file
-```
-
 ### Key Components (all in app.py):
 
 - **Repository Cloning**: Uses GitPython to clone repos to temporary directories
