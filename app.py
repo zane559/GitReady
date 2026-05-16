@@ -39,6 +39,266 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Initialize session state early to prevent AttributeError
+if 'get_started' not in st.session_state:
+    st.session_state.get_started = False
+if 'analysis_results' not in st.session_state:
+    st.session_state.analysis_results = None
+if 'analysis_sections' not in st.session_state:
+    st.session_state.analysis_sections = None
+if 'repo_url' not in st.session_state:
+    st.session_state.repo_url = None
+if 'analysis_status' not in st.session_state:
+    st.session_state.analysis_status = None
+if 'error_message' not in st.session_state:
+    st.session_state.error_message = None
+
+# Custom CSS for premium readme.so-inspired design
+st.markdown("""
+<style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    /* Global Styles - Increased Base Font Size */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    html, body, [class*="css"] {
+        font-size: 18px !important;
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Landing Page Styles */
+    .landing-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 85vh;
+        text-align: center;
+        padding: 3rem;
+    }
+    
+    .hero-title {
+        font-size: 4.5rem;
+        font-weight: 800;
+        line-height: 1.15;
+        margin-bottom: 2rem;
+        color: #1f2937;
+        max-width: 1100px;
+        letter-spacing: -0.02em;
+    }
+    
+    .hero-title .highlight {
+        color: #10b981;
+        font-weight: 800;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.5rem;
+        font-weight: 400;
+        line-height: 1.7;
+        color: #6b7280;
+        max-width: 800px;
+        margin: 0 auto 4rem;
+    }
+    
+    /* Premium Button Styles - ENLARGED */
+    .stButton > button {
+        background-color: #10b981 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 1.5rem 4rem !important;
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 8px 16px -2px rgba(16, 185, 129, 0.4) !important;
+        min-width: 280px !important;
+        letter-spacing: 0.02em !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: #059669 !important;
+        box-shadow: 0 16px 24px -4px rgba(16, 185, 129, 0.5) !important;
+        transform: translateY(-3px) scale(1.02) !important;
+    }
+    
+    .stButton > button:active {
+        transform: translateY(-1px) scale(1.01) !important;
+    }
+    
+    /* Workspace Styles */
+    .workspace-header {
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 2rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    /* Headings - Increased Sizes */
+    h1 {
+        font-size: 3rem !important;
+        font-weight: 800 !important;
+        color: #1f2937 !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    h2 {
+        font-size: 2.25rem !important;
+        font-weight: 700 !important;
+        color: #1f2937 !important;
+        margin-bottom: 0.875rem !important;
+    }
+    
+    h3 {
+        font-size: 1.75rem !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    /* Paragraph and Body Text */
+    p, div, span, label {
+        font-size: 1.125rem !important;
+        line-height: 1.7 !important;
+    }
+    
+    /* Input Field Styles - Larger */
+    .stTextInput > div > div > input {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 10px !important;
+        padding: 1rem 1.25rem !important;
+        font-size: 1.25rem !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+    }
+    
+    .stTextInput label {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #374151 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Metrics Styles - Larger */
+    [data-testid="stMetricValue"] {
+        font-size: 2.5rem !important;
+        font-weight: 800 !important;
+        color: #10b981 !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: 1.125rem !important;
+        font-weight: 600 !important;
+        color: #6b7280 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Tab Styles - Larger */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        padding: 1rem 0;
+        font-size: 1.25rem !important;
+        font-weight: 600;
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        color: #10b981 !important;
+        border-bottom-color: #10b981 !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Success/Error Message Styles - Larger Text */
+    .stSuccess, .stError, .stInfo, .stWarning {
+        font-size: 1.125rem !important;
+        padding: 1.25rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .stSuccess {
+        background-color: #d1fae5 !important;
+        border-left: 5px solid #10b981 !important;
+    }
+    
+    .stError {
+        background-color: #fee2e2 !important;
+        border-left: 5px solid #ef4444 !important;
+    }
+    
+    .stInfo {
+        background-color: #dbeafe !important;
+        border-left: 5px solid #3b82f6 !important;
+    }
+    
+    .stWarning {
+        background-color: #fef3c7 !important;
+        border-left: 5px solid #f59e0b !important;
+    }
+    
+    /* Divider Styles */
+    hr {
+        border: none;
+        border-top: 2px solid #e5e7eb;
+        margin: 2.5rem 0;
+    }
+    
+    /* Download Button - Larger */
+    .stDownloadButton > button {
+        background-color: #f3f4f6 !important;
+        color: #1f2937 !important;
+        border: 2px solid #e5e7eb !important;
+        border-radius: 10px !important;
+        padding: 1rem 2rem !important;
+        font-size: 1.125rem !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #e5e7eb !important;
+        border-color: #d1d5db !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Spinner Styles */
+    .stSpinner > div {
+        border-top-color: #10b981 !important;
+        width: 3rem !important;
+        height: 3rem !important;
+    }
+    
+    /* Code Blocks - Larger */
+    code {
+        font-size: 1rem !important;
+        padding: 0.25rem 0.5rem !important;
+        background-color: #f3f4f6 !important;
+        border-radius: 4px !important;
+    }
+    
+    pre {
+        font-size: 1rem !important;
+        padding: 1.25rem !important;
+        border-radius: 8px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Constants
 SUPPORTED_EXTENSIONS = {
     '.py', '.js', '.jsx', '.ts', '.tsx', '.java', '.cpp', '.c', '.h', '.hpp',
@@ -620,16 +880,188 @@ def render_results_ui():
         )
 
 
-def main():
-    """Main Streamlit application with session state management"""
+def render_landing_page():
+    """Render a perfectly centered SaaS landing page with forced typography scaling"""
     
-    # Initialize session state
-    init_session_state()
+    # 1. Global CSS Overrides targeting Streamlit's inner engine elements directly
+    st.markdown("""
+    <style>
+        /* Engineering Grid Background */
+        .stApp {
+            background-color: #ffffff !important;
+            background-image: radial-gradient(#e5e7eb 1.5px, transparent 1.5px) !important;
+            background-size: 24px 24px !important;
+        }
+        
+        /* Maximize page block layout width */
+        div[data-testid="stMainBlockContainer"] {
+            max-width: 900px !important;
+            padding-top: 5rem !important;
+            margin: 0 auto !important;
+        }
+
+        /* FORCE TYPOGRAPHY SCALING: Target Streamlit's auto-generated markdown elements */
+        div[data-testid="stMarkdownContainer"] p {
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+            color: #4b5563 !important;
+            letter-spacing: -0.05em !important;
+            color: #111827 !important;
+            text-align: center !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* MASSIVE H1 TITLE STYLING */
+        div[data-testid="stMarkdownContainer"] h1 {
+            font-size: 1.75rem !important; /* 80px - Large readable GitReady title */
+            font-weight: 900 !important;
+            line-height: 1.0 !important;
+            margin: 0 0 2rem 0 !important;
+            color: #111827 !important;
+            letter-spacing: -0.05em !important;
+            text-align: center !important;
+        }
+        
+        div[data-testid="stMarkdownContainer"] p.hero-subtitle {
+            font-size: 1.75rem !important; /* Forces subtitle text inside the box to be much bigger */
+            line-height: 1.4 !important;
+            font-weight: 500 !important;
+            color: #4b5563 !important;
+            text-align: center !important;
+            max-width: 700px !important;
+            margin: 0 auto 2.5rem auto !important;
+        }
+        
+        /* FORCE NATIVE STREAMLIT BUTTON DEAD CENTER */
+        div.stButton {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            margin: 2rem 0 4rem 0 !important;
+        }
+        
+        /* Premium custom styling for the native action button */
+        div.stButton > button {
+            background-color: #10b981 !important;
+            color: white !important;
+            font-weight: 700 !important;
+            font-size: 1.75rem !important; /* Larger action text */
+            padding: 14px 50px !important;
+            border-radius: 12px !important;
+            border: none !important;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.35) !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        
+        div.stButton > button:hover {
+            background-color: #059669 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.45) !important;
+        }
+
+        /* Beautiful Clean Terminal Preview */
+        .terminal-box {
+            width: 100%;
+            background-color: #1e293b !important;
+            border: 1px solid #334155 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2) !important;
+            overflow: hidden !important;
+            text-align: left !important;
+        }
+        
+        .terminal-titlebar {
+            background-color: #0f172a !important;
+            padding: 1rem 1.25rem !important;
+            display: flex !important;
+            gap: 8px !important;
+            border-bottom: 1px solid #334155 !important;
+        }
+        
+        .mac-dot {
+            width: 12px !important;
+            height: 12px !important;
+            border-radius: 50% !important;
+        }
+        
+        .m-red { background-color: #ef4444 !important; }
+        .m-yellow { background-color: #f59e0b !important; }
+        .m-green { background-color: #10b981 !important; }
+        
+        /* Upgraded Terminal Text Scale */
+        .terminal-body {
+            padding: 2rem !important;
+            font-family: 'Fira Code', Consolas, Monaco, monospace !important;
+            font-size: 1.1rem !important; /* Scales up terminal display text */
+            line-height: 1.7 !important;
+            color: #e2e8f0 !important;
+        }
+        
+        .log-line {
+            margin-bottom: 0.6rem !important;
+        }
+        .c-gray { color: #64748b !important; }
+        .c-green { color: #10b981 !important; }
+        .c-blue { color: #60a5fa !important; }
+        .c-white { color: #ffffff !important; }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # Header
+    # 2. Render Header Content Group
+    st.markdown("""
+    <div style="text-align: center;">
+        <div style="background-color: #d1fae5; color: #10b981; font-weight: 700; padding: 6px 16px; border-radius: 20px; display: inline-block; margin-bottom: 1.5rem; font-size: 0.95rem; border: 1px solid rgba(16, 185, 129, 0.25);">
+            ✨ IBM Hackathon Entry
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Render Main massive Title with inline HTML styling
+    st.markdown('''
+    <div style="text-align: center; margin: 2rem 0;">
+        <span style="font-size: 5rem; font-weight: 900; color: #111827; letter-spacing: -0.03em;">🚀 <span style="color: #10b981;">GitReady</span></span>
+    </div>
+    ''', unsafe_allow_html=True)
+    
+    # Render Subtitle using our explicit custom layout tag override class
+    st.markdown('<p class="hero-subtitle">The easiest way to build interview confidence from your code</p>', unsafe_allow_html=True)
+    
+    # 3. Render Native Execution Action Button (Centered using columns)
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col2:
+        if st.button("Get Started", type="primary", use_container_width=True):
+            st.session_state.get_started = True
+            st.rerun()
+        
+    # 4. Render Sleek Expanded Faux Terminal Log
+    st.markdown("""
+    <div class="terminal-box">
+        <div class="terminal-titlebar">
+            <div class="mac-dot m-red"></div>
+            <div class="mac-dot m-yellow"></div>
+            <div class="mac-dot m-green"></div>
+        </div>
+        <div class="terminal-body">
+            <div class="log-line"><span class="c-gray">$</span> <span class="c-white">git clone https://github.com/username/repo.git</span></div>
+            <div class="log-line class="c-white">Cloning into 'repo'...</div>
+            <div class="log-line"><span class="c-green">✓ Done!</span></div>
+            <div class="log-line"><span class="c-blue">Analyzing codebase structure using ibm/granite-8b-code-instruct...</span></div>
+            <div class="log-line class="c-white">Processing 47 source files...</div>
+            <div class="log-line" style="margin-top: 10px;"><span class="c-green" style="font-weight: bold;">✨ Core Interview Questions Generated Successfully!</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+def render_workspace():
+    """Render the main workspace after user clicks Get Started"""
+    
+    # Workspace Header
+    st.markdown('<div class="workspace-header">', unsafe_allow_html=True)
     st.title("🚀 GitReady")
     st.subheader("AI-Powered Interview Preparation Tool")
     st.markdown("Analyze any public GitHub repository to generate comprehensive interview materials")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Check credentials
     credentials, error = get_watsonx_credentials()
@@ -745,6 +1177,32 @@ export WATSONX_URL="https://us-south.ml.cloud.ibm.com"
         """,
         unsafe_allow_html=True
     )
+
+
+def main():
+    """Main Streamlit application with landing page and workspace"""
+    
+    # 1. Initialize session state FIRST
+    init_session_state()
+    
+    # 2. Inject GLOBAL CSS here so the grid background stays everywhere
+    st.markdown("""
+    <style>
+        /* Apply the engineering dot grid across the entire application */
+        .stApp {
+            background-color: #ffffff !important;
+            background-image: radial-gradient(#e5e7eb 1.5px, transparent 1.5px) !important;
+            background-size: 24px 24px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # 3. Render the correct screen based on app state
+    if not st.session_state.get_started:
+        render_landing_page()
+    else:
+        # Your workspace UI logic continues here safely...
+        render_workspace()
 
 
 if __name__ == "__main__":
