@@ -2,7 +2,71 @@
 
 **AI-Powered Interview Preparation Tool**
 
-GitReady analyzes any public GitHub repository to generate comprehensive interview preparation materials using IBM Watsonx.ai. Built for the IBM Bob Hackathon.
+GitReady analyzes any public GitHub repository to generate comprehensive interview preparation materials using IBM Watsonx.ai. Built entirely with **IBM Bob IDE** for the IBM Bob Hackathon.
+
+## 🤖 Built with IBM Bob IDE
+
+**This entire application was designed, developed, and refined using IBM Bob IDE** - IBM's AI-powered development assistant. Bob served as the primary development tool, handling everything from initial architecture decisions to final code implementation.
+
+### How Bob Built GitReady
+
+IBM Bob IDE was instrumental in every phase of development:
+
+1. **Architecture Design**
+   - Bob analyzed the requirements and recommended a single-file Streamlit architecture for simplicity
+   - Suggested optimal file processing patterns to handle diverse codebases
+   - Designed the four-tab output structure for interview preparation materials
+
+2. **Watsonx.ai Integration**
+   - Bob researched and implemented the IBM Watsonx.ai Python SDK integration
+   - Crafted specialized prompts for each analysis type (technical questions, weaknesses, elevator pitch)
+   - Configured optimal model parameters (temperature, token limits) for consistent results
+   - Implemented proper error handling for API calls and credential management
+
+3. **Code Implementation**
+   - Generated the complete `app.py` with all core functionality
+   - Implemented repository cloning with GitPython and proper cleanup patterns
+   - Built file filtering logic to handle binary files and ignore dependency directories
+   - Created the Streamlit UI with tabs, error states, and download functionality
+
+4. **Prompt Engineering**
+   - Designed the `create_analysis_prompt()` function with context-aware instructions
+   - Ensured prompts explicitly reference actual code to avoid generic responses
+   - Optimized prompt structure to work within Granite model token limits
+
+5. **Testing & Refinement**
+   - Debugged encoding issues with diverse repository file types
+   - Fixed Windows path handling using `pathlib.Path` objects
+   - Optimized file size limits to prevent memory issues
+   - Added comprehensive error messages for better user experience
+
+### Bob's Development Workflow
+
+```
+User Request → Bob Analysis → Code Generation → Testing → Refinement
+     ↓              ↓              ↓              ↓          ↓
+  "Build an    Researched     Generated      Identified   Fixed bugs,
+   interview   Watsonx.ai     complete       edge cases   optimized
+   prep tool"  SDK & best     app.py with    (encoding,   performance
+               practices      all features   paths)
+```
+
+### Key Bob-Generated Components
+
+- **Repository Analysis Engine**: Bob designed the file traversal logic that handles 20+ programming languages
+- **AI Prompt Templates**: Bob crafted four specialized prompts optimized for Granite models
+- **Error Handling**: Bob implemented comprehensive try/except patterns with user-friendly messages
+- **Cleanup Logic**: Bob ensured proper temporary directory cleanup using try/finally blocks
+
+### Bob Session Exports
+
+All development sessions with Bob are documented in the `bob_sessions/` folder, showing:
+- Initial project setup and architecture decisions
+- Iterative refinements and bug fixes
+- Prompt engineering iterations
+- Testing and optimization steps
+
+**IBM Bob IDE transformed a concept into a production-ready application in record time**, demonstrating the power of AI-assisted development for hackathon projects.
 
 ## 🎯 Features
 

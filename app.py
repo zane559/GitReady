@@ -148,12 +148,12 @@ def validate_github_url(url: str) -> Tuple[bool, str]:
     return True, url
 
 
-def clone_repository(repo_url: str, temp_dir: str) -> Tuple[bool, Any]:
+def clone_repository(repo_url: str, temp_dir: str) -> Tuple[bool, str]:
     """Clone GitHub repository to temporary directory"""
     try:
         logger.info(f"Cloning repository: {repo_url}")
         repo = Repo.clone_from(repo_url, temp_dir, depth=1)
-        return True, repo
+        return True, "Success"
     except Exception as e:
         logger.error(f"Clone failed: {e}")
         return False, f"Failed to clone repository: {str(e)}"
@@ -323,7 +323,7 @@ def stream_analysis_generator(model: Model, prompt: str) -> Generator[str, None,
         yield f"\n\n❌ Streaming error: {str(e)}"
 
 
-def analyze_with_watsonx_streaming(code_content: str, repo_url: str, credentials: Dict) -> Tuple[bool, str, Optional[Any]]:
+def analyze_with_watsonx_streaming(code_content: str, repo_url: str, credentials: Dict) -> Tuple[bool, str, Optional[str]]:
     """
     Analyze code using IBM Watsonx.ai with streaming support and token management.
     Returns: (success, result_text, error_message)
@@ -492,7 +492,7 @@ def analyze_repository_async(
             return result
         
         # Override with custom config if provided
-        if model_config and credentials:
+        if model_config:
             credentials.update(model_config)
         
         # Create temporary directory
@@ -674,6 +674,7 @@ export WATSONX_URL="https://us-south.ml.cloud.ibm.com"
                         success, clone_result = clone_repository(repo_url, temp_dir)
                         if not success:
                             st.error(f"❌ {clone_result}")
+                            st.session_state.error_message = clone_result
                             return
                         st.success("✅ Repository cloned successfully")
                     
@@ -683,6 +684,7 @@ export WATSONX_URL="https://us-south.ml.cloud.ibm.com"
                         
                         if not files_content:
                             st.error("❌ No supported code files found in repository")
+                            st.session_state.error_message = "No supported code files found"
                             return
                         
                         st.success(f"✅ Read {file_count} files ({total_size / 1024:.1f} KB)")

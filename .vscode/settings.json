@@ -1,0 +1,11 @@
+{
+    "python.defaultInterpreterPath": "C:\\Users\\Suraaz\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+    "python.analysis.extraPaths": [],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.languageServer": "Pylance",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.indexing": true
+}
+
+// Made with Bob

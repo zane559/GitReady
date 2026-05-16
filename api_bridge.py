@@ -11,14 +11,16 @@ import logging
 import secrets
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Security, Depends, status, Request
 from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator, constr
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Annotated
 import uvicorn
 
 # Import core business logic from app.py
@@ -39,7 +41,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api_bridge")
 
 # ============================================================================
 # ENUMS
@@ -110,10 +112,10 @@ class HealthResponse(BaseModel):
     dependencies: Dict[str, str] = Field(..., description="Status of dependencies")
 
 class RepositoryAnalysisRequest(BaseModel):
-    repository_url: constr(regex=r'^https?://github\.com/[^/]+/[^/]+/?$') = Field(
-        ..., 
+    repository_url: str = Field(
+        ...,
         description="Public GitHub repository URL",
-        example="https://github.com/username/repository"
+        examples=["https://github.com/username/repository"]
     )
     analysis_depth: Optional[str] = Field("standard", description="Depth of analysis")
     include_dependencies: Optional[bool] = Field(False, description="Analyze dependency files")
@@ -130,7 +132,7 @@ class FileInfo(BaseModel):
     content_preview: Optional[str] = Field(None, max_length=500, description="First 500 chars of content")
 
 class RepositoryAnalysisResponse(BaseModel):
-    analysis_id: constr(regex=r'^ana_[a-zA-Z0-9]{16}$') = Field(..., description="Unique analysis ID")
+    analysis_id: str = Field(..., description="Unique analysis ID", pattern=r'^ana_[a-zA-Z0-9]{16}$')
     repository_url: str = Field(..., description="Analyzed repository URL")
     repository_name: str = Field(..., description="Repository name")
     status: AnalysisStatus = Field(..., description="Analysis status")
@@ -142,7 +144,7 @@ class RepositoryAnalysisResponse(BaseModel):
     error: Optional[str] = Field(None, description="Error message if failed")
 
 class CodeQualityRequest(BaseModel):
-    analysis_id: constr(regex=r'^ana_[a-zA-Z0-9]{16}$') = Field(..., description="Analysis ID to assess")
+    analysis_id: str = Field(..., description="Analysis ID to assess", pattern=r'^ana_[a-zA-Z0-9]{16}$')
     quality_checks: Optional[List[QualityCheck]] = Field(
         [QualityCheck.COMPLEXITY, QualityCheck.SECURITY, QualityCheck.BEST_PRACTICES],
         description="Quality checks to perform"
@@ -214,7 +216,7 @@ class WatsonxParameters(BaseModel):
     top_p: Optional[float] = Field(1.0, ge=0, le=1, description="Top-p sampling")
 
 class InterviewGenerationRequest(BaseModel):
-    analysis_id: constr(regex=r'^ana_[a-zA-Z0-9]{16}$') = Field(..., description="Analysis ID")
+    analysis_id: str = Field(..., description="Analysis ID", pattern=r'^ana_[a-zA-Z0-9]{16}$')
     candidate_experience_level: Optional[ExperienceLevel] = Field(ExperienceLevel.MID, description="Experience level")
     technical_domains: Optional[List[str]] = Field(None, description="Technical domains to focus on")
     question_difficulty: Optional[Difficulty] = Field(Difficulty.MIXED, description="Question difficulty")
@@ -256,7 +258,7 @@ class CodeWeaknessesAnalysis(BaseModel):
     technical_debt: Optional[List[str]] = None
 
 class InterviewGenerationResponse(BaseModel):
-    interview_id: constr(regex=r'^int_[a-zA-Z0-9]{16}$') = Field(..., description="Interview ID")
+    interview_id: str = Field(..., description="Interview ID", pattern=r'^int_[a-zA-Z0-9]{16}$')
     analysis_id: str = Field(..., description="Associated analysis ID")
     status: InterviewStatus = Field(..., description="Generation status")
     technical_questions: Optional[List[TechnicalQuestion]] = None
@@ -270,7 +272,7 @@ class InterviewGenerationResponse(BaseModel):
     error: Optional[str] = None
 
 class QuestionGenerationRequest(BaseModel):
-    analysis_id: constr(regex=r'^ana_[a-zA-Z0-9]{16}$') = Field(..., description="Analysis ID")
+    analysis_id: str = Field(..., description="Analysis ID", pattern=r'^ana_[a-zA-Z0-9]{16}$')
     number_of_questions: Optional[int] = Field(10, ge=1, le=50)
     difficulty: Optional[Difficulty] = Field(Difficulty.MIXED)
     categories: Optional[List[str]] = None
@@ -370,9 +372,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content=ErrorResponse(
             error=f"HTTP_{exc.status_code}",
             message=exc.detail,
+            detail=None,
             timestamp=datetime.utcnow(),
             path=str(request.url.path)
-        ).dict()
+        ).model_dump()
     )
 
 @app.exception_handler(Exception)
@@ -386,7 +389,7 @@ async def general_exception_handler(request: Request, exc: Exception):
             detail=str(exc) if os.getenv("DEBUG") else None,
             timestamp=datetime.utcnow(),
             path=str(request.url.path)
-        ).dict()
+        ).model_dump()
     )
 
 # ============================================================================
@@ -489,7 +492,7 @@ async def analyze_repository(
         )
         
         analysis_store[analysis_id] = {
-            "response": response.dict(),
+            "response": response.model_dump(),
             "raw_result": result['result'],
             "metadata": result['metadata']
         }
@@ -534,6 +537,8 @@ async def assess_code_quality(
                         message=line.strip()[:200],
                         file="app.py",
                         line=1,
+                        column=None,
+                        code_snippet=None,
                         suggestion="Review and refactor as needed"
                     ))
         
@@ -544,14 +549,15 @@ async def assess_code_quality(
             "complexity": ComplexityMetrics(
                 average_cyclomatic_complexity=4.2,
                 max_cyclomatic_complexity=15,
-                high_complexity_functions=len(issues) // 3
-            ).dict(),
+                high_complexity_functions=len(issues) // 3,
+                cognitive_complexity_score=None
+            ).model_dump(),
             "maintainability": MaintainabilityMetrics(
                 maintainability_index=quality_score,
                 code_duplication_percentage=5.0,
                 average_function_length=25.0,
                 documentation_coverage=60.0
-            ).dict(),
+            ).model_dump(),
             "security": SecurityMetrics(
                 vulnerabilities_found=len([i for i in issues if 'security' in i.type.lower()]),
                 critical=0,
@@ -559,7 +565,7 @@ async def assess_code_quality(
                 medium=len([i for i in issues if i.severity == "medium"]),
                 low=len([i for i in issues if i.severity == "low"]),
                 security_score=quality_score
-            ).dict()
+            ).model_dump()
         }
         
         recommendations = [
@@ -667,7 +673,7 @@ async def generate_interview_materials(
         )
         
         interview_store[interview_id] = {
-            "response": response.dict(),
+            "response": response.model_dump(),
             "analysis_id": request.analysis_id
         }
         
@@ -708,11 +714,13 @@ async def generate_technical_questions(
                 a_line = next((l for l in lines if l.startswith('A')), '')
                 
                 if q_line and a_line:
+                    # Handle difficulty - use MEDIUM as default if MIXED or None
+                    diff = request.difficulty if request.difficulty and request.difficulty != Difficulty.MIXED else Difficulty.MEDIUM
                     questions.append(TechnicalQuestion(
                         question_number=i,
                         question=q_line.split(':', 1)[1].strip() if ':' in q_line else q_line,
                         answer=a_line.split(':', 1)[1].strip() if ':' in a_line else a_line,
-                        difficulty=request.difficulty if request.difficulty != Difficulty.MIXED else Difficulty.MEDIUM,
+                        difficulty=diff,
                         category="general",
                         follow_up_questions=["Explain your reasoning"] if request.include_follow_ups else None,
                         scoring_rubric=ScoringRubric(
